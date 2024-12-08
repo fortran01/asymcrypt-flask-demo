@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Cryptography Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        .success {
+            color: #198754;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">RSA Cryptography Demo</h1>
+
+        <!-- Public Key Display -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Public Key</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-primary" onclick="getPublicKey()">Show Public Key</button>
+                <div id="publicKeyResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Encryption Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Encrypt Data</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="encryptData" class="form-label">Data to Encrypt:</label>
+                    <input type="text" class="form-control" id="encryptData">
+                </div>
+                <button class="btn btn-primary" onclick="encryptData()">Encrypt</button>
+                <div id="encryptResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Decryption Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Decrypt Data</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="decryptData" class="form-label">Encrypted Data (Base64):</label>
+                    <input type="text" class="form-control" id="decryptData">
+                </div>
+                <button class="btn btn-primary" onclick="decryptData()">Decrypt</button>
+                <div id="decryptResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Signing Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Sign Message</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="signMessage" class="form-label">Message to Sign:</label>
+                    <input type="text" class="form-control" id="signMessage">
+                </div>
+                <button class="btn btn-primary" onclick="signMessage()">Sign</button>
+                <div id="signResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Verification Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Verify Signature</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="verifyMessage" class="form-label">Original Message:</label>
+                    <input type="text" class="form-control" id="verifyMessage">
+                </div>
+                <div class="mb-3">
+                    <label for="verifySignature" class="form-label">Signature (Base64):</label>
+                    <input type="text" class="form-control" id="verifySignature">
+                </div>
+                <button class="btn btn-primary" onclick="verifySignature()">Verify</button>
+                <div id="verifyResult" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function getPublicKey() {
+            try {
+                const response = await fetch('/get_public_key');
+                const data = await response.json();
+                document.getElementById('publicKeyResult').textContent = data.public_key;
+            } catch (error) {
+                document.getElementById('publicKeyResult').textContent = 'Error: ' + error;
+            }
+        }
+
+        async function encryptData() {
+            const data = document.getElementById('encryptData').value;
+            try {
+                const response = await fetch('/encrypt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: data })
+                });
+                const result = await response.json();
+                document.getElementById('encryptResult').textContent = 
+                    result.encrypted_data || result.error;
+            } catch (error) {
+                document.getElementById('encryptResult').textContent = 'Error: ' + error;
+            }
+        }
+
+        async function decryptData() {
+            const encryptedData = document.getElementById('decryptData').value;
+            try {
+                const response = await fetch('/decrypt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ encrypted_data: encryptedData })
+                });
+                const result = await response.json();
+                document.getElementById('decryptResult').textContent = 
+                    result.decrypted_data || result.error;
+            } catch (error) {
+                document.getElementById('decryptResult').textContent = 'Error: ' + error;
+            }
+        }
+
+        async function signMessage() {
+            const message = document.getElementById('signMessage').value;
+            try {
+                const response = await fetch('/sign', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                const result = await response.json();
+                document.getElementById('signResult').textContent = 
+                    result.signature || result.error;
+            } catch (error) {
+                document.getElementById('signResult').textContent = 'Error: ' + error;
+            }
+        }
+
+        async function verifySignature() {
+            const message = document.getElementById('verifyMessage').value;
+            const signature = document.getElementById('verifySignature').value;
+            try {
+                const response = await fetch('/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        message: message,
+                        signature: signature
+                    })
+                });
+                const result = await response.json();
+                const resultElement = document.getElementById('verifyResult');
+                if (result.verified) {
+                    resultElement.textContent = 'Signature is valid!';
+                    resultElement.className = 'result success';
+                } else {
+                    resultElement.textContent = 'Invalid signature!';
+                    resultElement.className = 'result error';
+                }
+            } catch (error) {
+                document.getElementById('verifyResult').textContent = 'Error: ' + error;
+                document.getElementById('verifyResult').className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>
